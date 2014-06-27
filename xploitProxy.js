@@ -8,11 +8,20 @@ var xploit = require('./xploit.js');
 var httpProxy = require('http-proxy');
 var localPort = 8080;
 
+var lastSocksHost;
+
 // redirige todos los requests a facebook.com
 var proxy = httpProxy.createProxyServer({});
 var httpServer = require('http').createServer(function(req, res) {
   console.log(req.headers);
-  proxy.web(req, res, { target: 'http://' + req.headers.host });
+
+  var target;
+  if (req.headers.host) {
+    target = 'http://' + req.headers.host;
+  } else {
+    target = lastSocksHost;
+  }
+  proxy.web(req, res, { target: target });
 });
 
 httpServer.listen(localPort, '0.0.0.0');
@@ -21,9 +30,10 @@ httpServer.listen(localPort, '0.0.0.0');
 var socksServer = argyle(8888, '0.0.0.0');
 
 socksServer.hostPortFilter = function(host, port) {
-  //if (xploit.target.host === host && xploit.target.port === port) {
-    if (port === 80) return {host: '127.0.0.1', port: localPort}
-  //}
+  if (xploit.shouldIntercept(host, port)) {
+    lastSocksHost = host;
+    return {host: '127.0.0.1', port: localPort}
+  }
 };
 
 
