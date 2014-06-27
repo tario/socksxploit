@@ -1,0 +1,9 @@
+{
+  "name": "socksexploit",
+  "version": "0.0.1",
+  "dependencies": {
+    "express": "4.1.2",
+    "proxy-middleware": "0.0.1"
+  },
+  "repository": "none"
+}
