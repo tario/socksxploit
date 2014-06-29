@@ -1,0 +1,29 @@
+#!/bin/sh
+
+#
+# Build a certificate signing request and private key.  Use this
+# when your root certificate and key is not available locally.
+#
+
+export KEY_DIR=$PWD/../keys/
+export KEY_CONFIG=$PWD/openssl.cnf
+export KEY_SIZE=1024
+export KEY_COUNTRY=AR
+export KEY_PROVINCE=BA
+export KEY_CITY="Buenos Aires"
+export KEY_ORG="socksexploit"
+export KEY_EMAIL=""
+
+if test $# -ne 1; then
+    echo "usage: build-req <name>";
+    exit 1
+fi                                                                             
+
+if test "$KEY_DIR"; then
+    cd "$KEY_DIR" && \
+    touch index.txt
+    echo 01 > serial
+    openssl req -days 3650 -nodes -new -keyout "$1".key -out "$1".csr -config "$KEY_CONFIG"
+else
+    echo you must define KEY_DIR
+fi

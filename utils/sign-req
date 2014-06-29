@@ -1,0 +1,26 @@
+#!/bin/sh
+
+#
+# Sign a certificate signing request (a .csr file)
+# with a local root certificate and key.
+#
+export KEY_DIR=$PWD/../keys/
+export KEY_CONFIG=$PWD/openssl.cnf
+export KEY_SIZE=1024
+export KEY_COUNTRY=AR
+export KEY_PROVINCE=BA
+export KEY_CITY="Buenos Aires"
+export KEY_ORG="socksexploit"
+export KEY_EMAIL=""
+
+if test $# -ne 1; then
+        echo "usage: sign-req <name>";
+        exit 1
+fi                                                                             
+
+if test "$KEY_DIR"; then
+	cd "$KEY_DIR" && \
+	openssl ca -days 3650 -out "$1".crt -in "$1".csr -config "$KEY_CONFIG"
+else
+	echo you must define KEY_DIR
+fi
