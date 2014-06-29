@@ -14,7 +14,7 @@ export KEY_EMAIL=""
 
 if test "$KEY_DIR"; then
 	cd "$KEY_DIR" && \
-	openssl req -sha512 -days 3650 -nodes -new -x509 -keyout ca.key -out ca.crt -config "$KEY_CONFIG" && \
+	openssl req -days 3650 -nodes -new -x509 -keyout ca.key -out ca.crt -config "$KEY_CONFIG" && \
         chmod 0600 ca.key
 else
 	echo you must define KEY_DIR
