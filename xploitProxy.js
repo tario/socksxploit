@@ -32,8 +32,8 @@ httpServer.listen(localPort, '0.0.0.0');
 
 function getCredentialsContext (hostname) {
   return crypto.createCredentials({
-    key: fs.readFileSync('keys/ssl-server.key'),
-    cert: fs.readFileSync('keys/ssl-server.crt')
+    key: fs.readFileSync('keys/'+hostname+'/ssl-server.key'),
+    cert: fs.readFileSync('keys/'+hostname+'/ssl-server.crt')
   }).context;
 }
 

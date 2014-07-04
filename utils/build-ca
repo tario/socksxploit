@@ -11,6 +11,8 @@ export KEY_PROVINCE=BA
 export KEY_CITY="Buenos Aires"
 export KEY_ORG="socksexploit"
 export KEY_EMAIL=""
+export KEY_CA_KEY=$PWD/../keys/ca.key
+export KEY_CA_CRT=$PWD/../keys/ca.crt
 
 if test "$KEY_DIR"; then
 	cd "$KEY_DIR" && \
