@@ -78,6 +78,7 @@ socksServer.hostPortFilter = function(host, port) {
 
 
 socksServer.on('connected', function(req, dest) {
+    // aca no se puede interceptar nada, esto es trafico encriptado
     req.pipe(dest);
     dest.pipe(req);
 });
