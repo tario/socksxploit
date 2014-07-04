@@ -44,8 +44,13 @@ var options = {
   key: fs.readFileSync('keys/ssl-server.key'),
   cert: fs.readFileSync('keys/ssl-server.crt'),
   SNICallback: function(hostname){
-    console.log("Usando certificado para " + hostname);
-    return getCredentialsContext(hostname);
+    try {
+      console.log("Usando certificado para " + hostname);
+      return getCredentialsContext(hostname);
+    } catch(e) {
+      console.log(e);
+      return null
+    }
   }
 };
 var httpsServer = https.createServer(options, function (req, res) {
