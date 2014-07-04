@@ -4,6 +4,7 @@ var argyle = require('./lib/argyle/index.js');
 var http = require("http");
 var https = require("https");
 var fs = require("fs");
+var crypto = require("crypto");
 
 // este archivo NO esta en el repo
 var xploit = require('./xploit.js');
@@ -29,10 +30,20 @@ var httpServer = http.createServer(function(req, res) {
 });
 httpServer.listen(localPort, '0.0.0.0');
 
+function getCredentialsContext (hostname) {
+  return crypto.createCredentials({
+    key: fs.readFileSync('keys/ssl-server.key'),
+    cert: fs.readFileSync('keys/ssl-server.crt')
+  }).context;
+}
 
 var options = {
   key: fs.readFileSync('keys/ssl-server.key'),
-  cert: fs.readFileSync('keys/ssl-server.crt')
+  cert: fs.readFileSync('keys/ssl-server.crt'),
+  SNICallback: function(hostname){
+    console.log("Usando certificado para " + hostname);
+    return getCredentialsContext(hostname);
+  }
 };
 var httpsServer = https.createServer(options, function (req, res) {
   console.log(req.headers);
