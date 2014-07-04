@@ -14,6 +14,7 @@ var localPort = 8080;
 var httpsLocalPort = 8443;
 
 var lastSocksHost;
+var lastSocksPort;
 
 // redirige todos los requests a facebook.com
 var proxy = httpProxy.createProxyServer({});
@@ -52,7 +53,7 @@ var httpsServer = https.createServer(options, function (req, res) {
   if (req.headers.host) {
     target = 'https://' + req.headers.host;
   } else {
-    target = lastSocksHost;
+    target = lastSocksHost + ":" + lastSocksPort;
   }
   proxy.web(req, res, { target: target });
 });
@@ -65,6 +66,7 @@ socksServer.hostPortFilter = function(host, port) {
   var intercept = xploit.shouldIntercept(host, port);
   if (intercept) {
     lastSocksHost = host;
+    lastSocksPort = port;
 
     if (intecept === "http") {
       return {host: '127.0.0.1', port: localPort};
