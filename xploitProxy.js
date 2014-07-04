@@ -50,7 +50,7 @@ var httpsServer = https.createServer(options, function (req, res) {
 
   var target;
   if (req.headers.host) {
-    target = 'http://' + req.headers.host;
+    target = 'https://' + req.headers.host;
   } else {
     target = lastSocksHost;
   }
