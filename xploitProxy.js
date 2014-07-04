@@ -25,9 +25,11 @@ var httpServer = http.createServer(function(req, res) {
   if (req.headers.host) {
     target = 'http://' + req.headers.host;
   } else {
-    target = lastSocksHost;
+    target = lastSocksHost + ":" + lastSocksPort;
   }
-  proxy.web(req, res, { target: target });
+
+  var streams = xploit.interceptStreams(req, res);
+  proxy.web(streams.req, streams.res, { target: target });
 });
 httpServer.listen(localPort, '0.0.0.0');
 
@@ -55,7 +57,9 @@ var httpsServer = https.createServer(options, function (req, res) {
   } else {
     target = lastSocksHost + ":" + lastSocksPort;
   }
-  proxy.web(req, res, { target: target });
+
+  var streams = xploit.interceptStreams(req, res);
+  proxy.web(streams.req, streams.res, { target: target });
 });
 httpsServer.listen(httpsLocalPort, '0.0.0.0');
 
@@ -68,7 +72,8 @@ socksServer.hostPortFilter = function(host, port) {
     lastSocksHost = host;
     lastSocksPort = port;
 
-    if (intecept === "http") {
+    console.log("interceptando " + intercept);
+    if (intercept === "http") {
       return {host: '127.0.0.1', port: localPort};
     } else {
       return {host: '127.0.0.1', port: httpsLocalPort};
