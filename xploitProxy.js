@@ -19,8 +19,6 @@ var lastSocksPort;
 // redirige todos los requests a facebook.com
 var proxy = httpProxy.createProxyServer({});
 var httpServer = http.createServer(function(req, res) {
-  console.log(req.headers);
-
   var target;
   if (req.headers.host) {
     target = 'http://' + req.headers.host;
@@ -54,8 +52,6 @@ var options = {
   }
 };
 var httpsServer = https.createServer(options, function (req, res) {
-  console.log(req.headers);
-
   var target;
   if (req.headers.host) {
     target = 'https://' + req.headers.host;
@@ -77,7 +73,6 @@ socksServer.hostPortFilter = function(host, port) {
     lastSocksHost = host;
     lastSocksPort = port;
 
-    console.log("interceptando " + intercept);
     if (intercept === "http") {
       return {host: '127.0.0.1', port: localPort};
     } else {
