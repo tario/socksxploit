@@ -129,10 +129,8 @@ var httpServerConnectListener = function(request, socketRequest, bodyhead) {
     }
   );
 
-  proxySocket.on('data', socketRequest.write.bind(socketRequest));
-  proxySocket.on('end', socketRequest.end.bind(socketRequest));
-  socketRequest.on('data', proxySocket.write.bind(proxySocket));
-  socketRequest.on('end', proxySocket.end.bind(proxySocket));
+  proxySocket.pipe(socketRequest);
+  socketRequest.pipe(proxySocket);
 
   proxySocket.on(
     'error',
