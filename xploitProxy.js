@@ -54,7 +54,6 @@ var options = {
 
 
 var httpsServer = https.createServer(options, function (req, res) {
-  console.log("GET REQUEST https://");
   var target;
   if (req.headers.host) {
     target = 'https://' + req.headers.host;
@@ -86,7 +85,6 @@ function getHostPortFromString( hostString, defaultPort ) {
 var net = require("net");
 
 var hostPortFilter = function(host, port) {
-  console.log(host);
   var intercept = xploit.shouldIntercept(host, port);
   if (intercept) {
     lastSocksHost = host;
@@ -95,7 +93,16 @@ var hostPortFilter = function(host, port) {
     if (intercept === "http") {
       return {host: '127.0.0.1', port: localPort};
     } else {
-      return {host: '127.0.0.1', port: httpsLocalPort};
+
+      console.log("interceptar https");
+
+      try {
+        getCredentialsContext(host)
+        return {host: '127.0.0.1', port: httpsLocalPort};
+      } catch (e) {
+        console.log("ERROR: no se puede interceptar " + host + ":" + port + ", certificado no disponible");
+        return {host: host, port: port};
+      }
     }
   } else {
     return {host: host, port: port};
@@ -112,8 +119,6 @@ var httpServerConnectListener = function(request, socketRequest, bodyhead) {
   var proxySocket = new net.Socket();
 
   var hostPort = hostPortFilter(hostport[0], parseInt(hostport[1]));
-
-  console.log("COnnecting to " + hostPort.host + ":" + hostPort.port);
 
   proxySocket.connect(
     parseInt( hostPort.port), hostPort.host,
