@@ -51,7 +51,10 @@ var options = {
     }
   }
 };
+
+
 var httpsServer = https.createServer(options, function (req, res) {
+  console.log("GET REQUEST https://");
   var target;
   if (req.headers.host) {
     target = 'https://' + req.headers.host;
@@ -64,10 +67,26 @@ var httpsServer = https.createServer(options, function (req, res) {
 });
 httpsServer.listen(httpsLocalPort, '0.0.0.0');
 
-// este es un proxy socks5 normal
-var socksServer = argyle(8888, '0.0.0.0');
+var regex_hostport = /^([^:]+)(:([0-9]+))?$/;
+function getHostPortFromString( hostString, defaultPort ) {
+  var host = hostString;
+  var port = defaultPort;
+ 
+  var result = regex_hostport.exec( hostString );
+  if ( result != null ) {
+    host = result[1];
+    if ( result[2] != null ) {
+      port = result[3];
+    }
+  }
+ 
+  return( [ host, port ] );
+}
 
-socksServer.hostPortFilter = function(host, port) {
+var net = require("net");
+
+var hostPortFilter = function(host, port) {
+  console.log(host);
   var intercept = xploit.shouldIntercept(host, port);
   if (intercept) {
     lastSocksHost = host;
@@ -78,9 +97,64 @@ socksServer.hostPortFilter = function(host, port) {
     } else {
       return {host: '127.0.0.1', port: httpsLocalPort};
     }
+  } else {
+    return {host: host, port: port};
   }
 };
 
+var debugging = true;
+
+var httpServerConnectListener = function(request, socketRequest, bodyhead) {
+  var url = request.url;
+  var httpVersion = request['httpVersion'];
+
+  var hostport = getHostPortFromString( url, 443 );
+  var proxySocket = new net.Socket();
+
+  var hostPort = hostPortFilter(hostport[0], parseInt(hostport[1]));
+
+  console.log("COnnecting to " + hostPort.host + ":" + hostPort.port);
+
+  proxySocket.connect(
+    parseInt( hostPort.port), hostPort.host,
+    function () {
+      proxySocket.write( bodyhead );
+      // tell the caller the connection was successfully established
+      socketRequest.write( "HTTP/" + httpVersion + " 200 Connection established\r\n\r\n" );
+    }
+  );
+
+  proxySocket.on('data', socketRequest.write.bind(socketRequest));
+  proxySocket.on('end', socketRequest.end.bind(socketRequest));
+  socketRequest.on('data', proxySocket.write.bind(proxySocket));
+  socketRequest.on('end', proxySocket.end.bind(proxySocket));
+
+  proxySocket.on(
+    'error',
+    function ( err ) {
+      socketRequest.write( "HTTP/" + httpVersion + " 500 Connection error\r\n\r\n" );
+      if ( debugging ) {
+        console.log( '  < ERR: %s', err );
+      }
+      socketRequest.end();
+    }
+  );
+
+  socketRequest.on(
+    'error',
+    function ( err ) {
+      if ( debugging ) {
+        console.log( '  > ERR: %s', err );
+      }
+      proxySocket.end();
+    }
+  );
+};
+
+httpServer.addListener('connect', httpServerConnectListener);
+// este es un proxy socks5 normal
+var socksServer = argyle(8888, '0.0.0.0');
+socksServer.hostPortFilter = hostPortFilter;
 
 socksServer.on('connected', function(req, dest) {
     // aca no se puede interceptar nada, esto es trafico encriptado
