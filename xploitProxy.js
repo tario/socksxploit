@@ -134,38 +134,71 @@ var httpServerConnectListener = function(request, socketRequest, bodyhead) {
 
   var hostPort = hostPortFilter(hostport[0], parseInt(hostport[1]));
 
-  proxySocket.connect(
-    parseInt( hostPort.port), hostPort.host,
-    function () {
-      proxySocket.write( bodyhead );
-      // tell the caller the connection was successfully established
+  if (httpAgent) {
+    httpAgent.createSocket(hostPort, function(socket) {
+      socket.write( bodyhead );
       socketRequest.write( "HTTP/" + httpVersion + " 200 Connection established\r\n\r\n" );
-    }
-  );
 
-  proxySocket.pipe(socketRequest);
-  socketRequest.pipe(proxySocket);
+      socket.pipe(socketRequest);
+      socketRequest.pipe(socket);
 
-  proxySocket.on(
-    'error',
-    function ( err ) {
-      socketRequest.write( "HTTP/" + httpVersion + " 500 Connection error\r\n\r\n" );
-      if ( debugging ) {
-        console.log( '  < ERR: %s', err );
+      socket.on(
+        'error',
+        function ( err ) {
+          socketRequest.write( "HTTP/" + httpVersion + " 500 Connection error\r\n\r\n" );
+          if ( debugging ) {
+            console.log( '  < ERR: %s', err );
+          }
+          socketRequest.end();
+        }
+      );
+
+      socketRequest.on(
+        'error',
+        function ( err ) {
+          if ( debugging ) {
+            console.log( '  > ERR: %s', err );
+          }
+          socket.end();
+        }
+      );
+
+    });
+  } else {
+
+    proxySocket.connect(
+      parseInt( hostPort.port), hostPort.host,
+      function () {
+        proxySocket.write( bodyhead );
+        // tell the caller the connection was successfully established
+        socketRequest.write( "HTTP/" + httpVersion + " 200 Connection established\r\n\r\n" );
       }
-      socketRequest.end();
-    }
-  );
+    );
 
-  socketRequest.on(
-    'error',
-    function ( err ) {
-      if ( debugging ) {
-        console.log( '  > ERR: %s', err );
+    proxySocket.pipe(socketRequest);
+    socketRequest.pipe(proxySocket);
+
+    proxySocket.on(
+      'error',
+      function ( err ) {
+        socketRequest.write( "HTTP/" + httpVersion + " 500 Connection error\r\n\r\n" );
+        if ( debugging ) {
+          console.log( '  < ERR: %s', err );
+        }
+        socketRequest.end();
       }
-      proxySocket.end();
-    }
-  );
+    );
+
+    socketRequest.on(
+      'error',
+      function ( err ) {
+        if ( debugging ) {
+          console.log( '  > ERR: %s', err );
+        }
+        proxySocket.end();
+      }
+    );
+  }
 };
 
 httpServer.addListener('connect', httpServerConnectListener);
