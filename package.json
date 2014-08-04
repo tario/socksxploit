@@ -4,7 +4,7 @@
   "dependencies": {
     "express": "4.1.2",
     "http-proxy": "1.1.4",
-    "http-proxy-agent": "0.2.6"
+    "tunnel-agent": "0.4.0"
   },
   "repository": "none"
 }

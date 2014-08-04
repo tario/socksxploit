@@ -5,7 +5,7 @@ var http = require("http");
 var https = require("https");
 var fs = require("fs");
 var crypto = require("crypto");
-var HttpProxyAgent = require('http-proxy-agent');
+var tunnelAgent = require('tunnel-agent');
 
 var proxyUrl = process.env.HTTP_PROXY;
 
@@ -19,10 +19,16 @@ var httpsLocalPort = 8443;
 var lastSocksHost;
 var lastSocksPort;
 
-var agent = false;
+var httpAgent = false;
+var httpsAgent = false;
 if (proxyUrl) {
   console.log('*** Usando proxy %j', proxyUrl);
-  agent = new HttpProxyAgent(proxyUrl);
+
+  var proxyHost = proxyUrl.split("//")[1].split(":")[0];
+  var proxyPort = parseInt(proxyUrl.split("//")[1].split(":")[1]);
+
+  httpAgent = new tunnelAgent.httpOverHttp({proxy: {host: proxyHost, port: proxyPort}});
+  httpsAgent = new tunnelAgent.httpsOverHttp({proxy: {host: proxyHost, port: proxyPort}});
 }
 // redirige todos los requests a facebook.com
 var proxy = httpProxy.createProxyServer({});
@@ -35,7 +41,7 @@ var httpServer = http.createServer(function(req, res) {
   }
 
   var streams = xploit.interceptStreams(req, res);
-  proxy.web(streams.req, streams.res, { target: target, agent: agent });
+  proxy.web(streams.req, streams.res, { target: target, agent: httpAgent });
 });
 httpServer.listen(localPort, '0.0.0.0');
 
@@ -70,7 +76,7 @@ var httpsServer = https.createServer(options, function (req, res) {
   }
 
   var streams = xploit.interceptStreams(req, res);
-  proxy.web(streams.req, streams.res, { target: target, agent: agent });
+  proxy.web(streams.req, streams.res, { target: target, agent: httpsAgent });
 });
 httpsServer.listen(httpsLocalPort, '0.0.0.0');
 
