@@ -7,7 +7,7 @@ var fs = require("fs");
 var crypto = require("crypto");
 var HttpProxyAgent = require('http-proxy-agent');
 
-var proxy = process.env.HTTP_PROXY;
+var proxyUrl = process.env.HTTP_PROXY;
 
 // este archivo NO esta en el repo
 var xploit = require('./xploit.js');
@@ -20,9 +20,9 @@ var lastSocksHost;
 var lastSocksPort;
 
 var agent = false;
-if (proxy) {
-  console.log('*** Usando proxy %j', proxy);
-  agent = new HttpProxyAgent(proxy);
+if (proxyUrl) {
+  console.log('*** Usando proxy %j', proxyUrl);
+  agent = new HttpProxyAgent(proxyUrl);
 }
 // redirige todos los requests a facebook.com
 var proxy = httpProxy.createProxyServer({});
@@ -70,7 +70,7 @@ var httpsServer = https.createServer(options, function (req, res) {
   }
 
   var streams = xploit.interceptStreams(req, res);
-  proxy.web(streams.req, streams.res, { target: target });
+  proxy.web(streams.req, streams.res, { target: target, agent: agent });
 });
 httpsServer.listen(httpsLocalPort, '0.0.0.0');
 
